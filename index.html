@@ -665,8 +665,8 @@ body {
         <!-- CTA -->
         <div class="cta">
           <p class="cta__label">Get early access</p>
-          <form class="cta__form" id="ctaForm" onsubmit="return false;">
-            <input type="email" class="cta__input" placeholder="you@company.com" required aria-label="Email address">
+          <form class="cta__form" id="ctaForm" action="https://formspree.io/f/meelbeqv" method="POST">
+            <input type="email" name="email" class="cta__input" placeholder="you@company.com" required aria-label="Email address">
             <button type="submit" class="cta__btn" id="ctaBtn">Notify Me</button>
           </form>
           <p class="cta__note">No spam. We'll reach out when it's your turn.</p>
@@ -736,20 +736,37 @@ body {
     setInterval(cycleStage, 1600);
   }, 1200);
 
-  // CTA form interaction
+  // CTA form — submit to Formspree via AJAX
   var form = document.getElementById('ctaForm');
   var btn = document.getElementById('ctaBtn');
 
   form.addEventListener('submit', function(e) {
     e.preventDefault();
     var input = form.querySelector('input');
-    if (input.value && input.checkValidity()) {
-      btn.textContent = 'You\'re in ✓';
-      btn.style.pointerEvents = 'none';
-      btn.style.opacity = '0.8';
-      input.disabled = true;
-      input.style.opacity = '0.5';
-    }
+    if (!input.value || !input.checkValidity()) return;
+
+    btn.textContent = 'Sending...';
+    btn.disabled = true;
+
+    fetch(form.action, {
+      method: 'POST',
+      headers: { 'Accept': 'application/json' },
+      body: new FormData(form)
+    }).then(function(res) {
+      if (res.ok) {
+        btn.textContent = 'You\'re in \u2713';
+        btn.style.pointerEvents = 'none';
+        btn.style.opacity = '0.8';
+        input.disabled = true;
+        input.style.opacity = '0.5';
+      } else {
+        btn.textContent = 'Try again';
+        btn.disabled = false;
+      }
+    }).catch(function() {
+      btn.textContent = 'Try again';
+      btn.disabled = false;
+    });
   });
 })();
 </script>
