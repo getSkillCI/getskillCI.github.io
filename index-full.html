@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>skillCI — Continuous Integration for Agent Skills</title>
+<meta name="description" content="Collect skills from across your repos, validate them against org standards, and ship them to your team's agent tools.">
+<link rel="icon" type="image/png" href="assets/ckillCI-icon-round.png">
+<meta property="og:title" content="skillCI — Continuous Integration for Agent Skills">
+<meta property="og:description" content="Collect skills from across your repos, validate them against org standards, and ship them to your team's agent tools.">
+<meta property="og:image" content="https://skillci.com/assets/skillCI-icon-square.png">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:site" content="@getskillCI">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg-deep: #060a11;
+  --bg-base: #0a0f1a;
+  --bg-surface: #111a2e;
+  --bg-elevated: #162038;
+  --border: rgba(106, 215, 87, 0.08);
+  --border-active: rgba(106, 215, 87, 0.3);
+  --green: #6AD757;
+  --green-dim: #5abc48;
+  --green-glow: rgba(106, 215, 87, 0.15);
+  --cyan: #4ec93e;
+  --amber: #fbbf24;
+  --text-primary: #e8f0ec;
+  --text-secondary: #7a8f85;
+  --text-muted: #4a5f55;
+  --mono: 'JetBrains Mono', monospace;
+  --sans: 'Outfit', sans-serif;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  font-family: var(--sans);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ---- Background Grid ---- */
+.bg-grid {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background-image:
+    linear-gradient(rgba(106, 215, 87, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(106, 215, 87, 0.02) 1px, transparent 1px);
+  background-size: 60px 60px;
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 30%, black 20%, transparent 70%);
+}
+
+.bg-glow {
+  position: fixed;
+  width: 800px;
+  height: 800px;
+  border-radius: 50%;
+  filter: blur(150px);
+  opacity: 0.07;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.bg-glow--1 {
+  top: -300px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--green);
+}
+
+.bg-glow--2 {
+  bottom: -400px;
+  right: -200px;
+  background: var(--cyan);
+  opacity: 0.04;
+}
+
+/* ---- Layout ---- */
+.page { position: relative; z-index: 1; min-height: 100vh; display: flex; flex-direction: column; }
+.container { width: 100%; max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+/* ---- Header ---- */
+.header {
+  padding: 28px 0;
+  opacity: 0;
+  animation: fadeDown 0.6s ease forwards;
+}
+
+.header__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.logo__svg {
+  height: 22px;
+  width: auto;
+}
+
+.header__badge {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--green);
+  background: var(--green-glow);
+  border: 1px solid rgba(106, 215, 87, 0.15);
+  padding: 5px 12px;
+  border-radius: 20px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* ---- Hero ---- */
+.hero {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  padding: 60px 0 40px;
+}
+
+.hero__content {
+  width: 100%;
+  text-align: center;
+}
+
+.hero__tag {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--green);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 28px;
+  opacity: 0;
+  animation: fadeUp 0.6s ease 0.15s forwards;
+}
+
+.hero__tag::before {
+  content: '$ ';
+  color: var(--text-muted);
+}
+
+.hero__title {
+  font-family: var(--sans);
+  font-size: clamp(42px, 6vw, 76px);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+  margin-bottom: 28px;
+  opacity: 0;
+  animation: fadeUp 0.7s ease 0.3s forwards;
+}
+
+.hero__title em {
+  font-style: normal;
+  background: linear-gradient(135deg, var(--green), var(--cyan));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero__desc {
+  font-size: 18px;
+  line-height: 1.65;
+  color: var(--text-secondary);
+  max-width: 600px;
+  margin: 0 auto 50px;
+  font-weight: 400;
+  opacity: 0;
+  animation: fadeUp 0.7s ease 0.45s forwards;
+}
+
+/* ---- Pipeline ---- */
+.pipeline {
+  opacity: 0;
+  animation: fadeUp 0.8s ease 0.6s forwards;
+  margin-bottom: 56px;
+}
+
+.pipeline__track {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  flex-wrap: wrap;
+}
+
+.pipeline__stage {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.pipeline__node {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px 28px;
+  text-align: center;
+  position: relative;
+  transition: border-color 0.4s ease, box-shadow 0.4s ease;
+  min-width: 160px;
+}
+
+.pipeline__node.--active {
+  border-color: var(--border-active);
+  box-shadow: 0 0 30px var(--green-glow), inset 0 1px 0 rgba(106, 215, 87, 0.08);
+}
+
+.pipeline__node-icon {
+  font-size: 22px;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.pipeline__node-label {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.pipeline__node-desc {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.pipeline__connector {
+  display: flex;
+  align-items: center;
+  padding: 0 6px;
+  height: 2px;
+  position: relative;
+}
+
+.pipeline__connector-line {
+  width: 48px;
+  height: 2px;
+  background: var(--border);
+  position: relative;
+  overflow: hidden;
+  border-radius: 1px;
+}
+
+.pipeline__connector-line::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, var(--green), transparent);
+  animation: pulseLine 3s ease-in-out infinite;
+}
+
+.pipeline__connector-arrow {
+  color: var(--text-muted);
+  font-size: 12px;
+  margin-left: 2px;
+  font-family: var(--mono);
+}
+
+/* ---- Terminal Preview ---- */
+.terminal {
+  max-width: 580px;
+  margin: 0 auto 56px;
+  background: var(--bg-base);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  opacity: 0;
+  animation: fadeUp 0.8s ease 0.75s forwards;
+}
+
+.terminal__bar {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 12px 16px;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.terminal__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  opacity: 0.4;
+}
+
+.terminal__dot:first-child { background: #ff5f57; opacity: 0.7; }
+.terminal__dot:nth-child(2) { background: #febc2e; opacity: 0.7; }
+.terminal__dot:nth-child(3) { background: #28c840; opacity: 0.7; }
+
+.terminal__title {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-left: 8px;
+}
+
+.terminal__body {
+  padding: 20px;
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+.terminal__line {
+  opacity: 0;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.terminal__line.--visible {
+  animation: typeLine 0.3s ease forwards;
+}
+
+.terminal__prompt { color: var(--green-dim); }
+.terminal__cmd { color: var(--text-primary); }
+.terminal__flag { color: var(--cyan); }
+.terminal__output { color: var(--text-muted); }
+.terminal__success { color: var(--green); }
+.terminal__warn { color: var(--amber); }
+
+/* ---- CTA ---- */
+.cta {
+  text-align: center;
+  margin-bottom: 20px;
+  opacity: 0;
+  animation: fadeUp 0.8s ease 0.9s forwards;
+}
+
+.cta__label {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 16px;
+}
+
+.cta__form {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  max-width: 440px;
+  margin: 0 auto;
+}
+
+.cta__input {
+  flex: 1;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 18px;
+  font-family: var(--mono);
+  font-size: 14px;
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.cta__input::placeholder { color: var(--text-muted); }
+
+.cta__input:focus {
+  border-color: var(--border-active);
+  box-shadow: 0 0 0 3px var(--green-glow);
+}
+
+.cta__btn {
+  background: linear-gradient(135deg, var(--green), var(--cyan));
+  color: var(--bg-deep);
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 600;
+  padding: 14px 24px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  letter-spacing: 0.01em;
+}
+
+.cta__btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 24px var(--green-glow);
+}
+
+.cta__btn:active {
+  transform: translateY(0);
+}
+
+.cta__note {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 14px;
+}
+
+/* ---- Footer ---- */
+.footer {
+  padding: 40px 0;
+  text-align: center;
+  border-top: 1px solid var(--border);
+  margin-top: auto;
+  opacity: 0;
+  animation: fadeUp 0.6s ease 1.05s forwards;
+}
+
+.footer__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.footer__copy {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.footer__link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-family: var(--mono);
+  font-size: 12px;
+  transition: color 0.2s ease;
+}
+
+.footer__link:hover { color: var(--text-primary); }
+
+.footer__link svg {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+}
+
+/* ---- Animations ---- */
+@keyframes fadeDown {
+  from { opacity: 0; transform: translateY(-12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulseLine {
+  0%, 100% { left: -100%; }
+  50% { left: 100%; }
+}
+
+@keyframes typeLine {
+  from { opacity: 0; transform: translateX(4px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes blinkCaret {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* ---- Pipeline cycle animation ---- */
+.pipeline__node {
+  transition: border-color 0.5s ease, box-shadow 0.5s ease, background 0.5s ease;
+}
+
+.pipeline__node.--active {
+  border-color: var(--border-active);
+  box-shadow: 0 0 30px var(--green-glow), inset 0 1px 0 rgba(106, 215, 87, 0.08);
+  background: rgba(106, 215, 87, 0.03);
+}
+
+.pipeline__node.--active .pipeline__node-label {
+  color: var(--green);
+  transition: color 0.5s ease;
+}
+
+.pipeline__connector-line {
+  transition: background 0.5s ease;
+}
+
+.pipeline__connector.--active .pipeline__connector-line {
+  background: var(--green-dim);
+}
+
+.pipeline__connector.--active .pipeline__connector-arrow {
+  color: var(--green);
+  transition: color 0.5s ease;
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 700px) {
+  .hero { padding: 40px 0 24px; }
+  .hero__desc { font-size: 16px; }
+
+  .pipeline__track {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .pipeline__stage { flex-direction: column; }
+
+  .pipeline__connector {
+    transform: rotate(90deg);
+    padding: 4px 0;
+  }
+
+  .pipeline__node { min-width: 200px; }
+
+  .cta__form {
+    flex-direction: column;
+  }
+
+  .cta__input, .cta__btn { width: 100%; }
+
+  .footer__inner {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .terminal { margin-bottom: 40px; }
+}
+</style>
+</head>
+<body>
+
+<div class="bg-grid"></div>
+<div class="bg-glow bg-glow--1"></div>
+<div class="bg-glow bg-glow--2"></div>
+
+<div class="page">
+  <!-- Header -->
+  <header class="header">
+    <div class="container">
+      <div class="header__inner">
+        <a href="/" class="logo">
+          <img src="assets/wordmark.svg" alt="skillCI" class="logo__svg">
+        </a>
+        <div class="header__badge">Coming Soon</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <main class="hero">
+    <div class="container">
+      <div class="hero__content">
+        <p class="hero__tag">skillci init</p>
+        <h1 class="hero__title">Continuous integration<br>for <em>agent skills</em></h1>
+        <p class="hero__desc">Collect skills from across your repos, validate them against org standards, and ship them to your team's agent tools — the same collect/test/deploy loop you already run for code, now applied to skills.</p>
+
+        <!-- Pipeline -->
+        <div class="pipeline">
+          <div class="pipeline__track">
+            <div class="pipeline__stage">
+              <div class="pipeline__node" data-stage="0">
+                <span class="pipeline__node-icon">&#x1F4E6;</span>
+                <div class="pipeline__node-label">Collect</div>
+                <div class="pipeline__node-desc">Scan repos for skills</div>
+              </div>
+              <div class="pipeline__connector" data-connector="0">
+                <div class="pipeline__connector-line"></div>
+                <span class="pipeline__connector-arrow">&#x25B8;</span>
+              </div>
+            </div>
+            <div class="pipeline__stage">
+              <div class="pipeline__node" data-stage="1">
+                <span class="pipeline__node-icon">&#x2705;</span>
+                <div class="pipeline__node-label">Validate</div>
+                <div class="pipeline__node-desc">Test against standards</div>
+              </div>
+              <div class="pipeline__connector" data-connector="1">
+                <div class="pipeline__connector-line"></div>
+                <span class="pipeline__connector-arrow">&#x25B8;</span>
+              </div>
+            </div>
+            <div class="pipeline__stage">
+              <div class="pipeline__node" data-stage="2">
+                <span class="pipeline__node-icon">&#x1F680;</span>
+                <div class="pipeline__node-label">Deploy</div>
+                <div class="pipeline__node-desc">Ship to agent tools</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Terminal -->
+        <div class="terminal">
+          <div class="terminal__bar">
+            <div class="terminal__dot"></div>
+            <div class="terminal__dot"></div>
+            <div class="terminal__dot"></div>
+            <span class="terminal__title">skillci — pipeline run</span>
+          </div>
+          <div class="terminal__body" id="terminalBody">
+            <div class="terminal__line" data-delay="400">
+              <span class="terminal__prompt">$ </span><span class="terminal__cmd">skillci run </span><span class="terminal__flag">--org acme-corp</span>
+            </div>
+            <div class="terminal__line" data-delay="900">
+              <span class="terminal__output">&#x25B8; Scanning 14 repositories...</span>
+            </div>
+            <div class="terminal__line" data-delay="1500">
+              <span class="terminal__output">&#x25B8; Found 38 skills across 6 repos</span>
+            </div>
+            <div class="terminal__line" data-delay="2100">
+              <span class="terminal__output">&#x25B8; Validating against org standards...</span>
+            </div>
+            <div class="terminal__line" data-delay="2800">
+              <span class="terminal__warn">&#x26A0; 2 skills need metadata updates</span>
+            </div>
+            <div class="terminal__line" data-delay="3400">
+              <span class="terminal__success">&#x2713; 36 skills validated and deployed</span>
+            </div>
+            <div class="terminal__line" data-delay="4000">
+              <span class="terminal__success">&#x2713; Pipeline complete in 4.2s</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CTA -->
+        <div class="cta">
+          <p class="cta__label">Get early access</p>
+          <form class="cta__form" id="ctaForm" action="https://formspree.io/f/meelbeqv" method="POST">
+            <input type="email" name="email" class="cta__input" placeholder="you@company.com" required aria-label="Email address">
+            <button type="submit" class="cta__btn" id="ctaBtn">Notify Me</button>
+          </form>
+          <p class="cta__note">No spam. We'll reach out when it's your turn.</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer__inner">
+        <span class="footer__copy">&copy; 2026 skillCI</span>
+        <a href="https://x.com/getskillCI" target="_blank" rel="noopener noreferrer" class="footer__link">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+          @getskillCI
+        </a>
+      </div>
+    </div>
+  </footer>
+</div>
+
+<script>
+(function() {
+  // Terminal line reveal
+  const lines = document.querySelectorAll('.terminal__line');
+  const observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        lines.forEach(function(line) {
+          const delay = parseInt(line.dataset.delay, 10) || 0;
+          setTimeout(function() {
+            line.classList.add('--visible');
+          }, delay);
+        });
+        observer.disconnect();
+      }
+    });
+  }, { threshold: 0.3 });
+
+  observer.observe(document.querySelector('.terminal'));
+
+  // Pipeline cycling
+  let currentStage = -1;
+  const nodes = document.querySelectorAll('.pipeline__node');
+  const connectors = document.querySelectorAll('.pipeline__connector');
+
+  function cycleStage() {
+    // Clear all
+    nodes.forEach(function(n) { n.classList.remove('--active'); });
+    connectors.forEach(function(c) { c.classList.remove('--active'); });
+
+    currentStage = (currentStage + 1) % 4; // 0, 1, 2, then 3 (all off briefly)
+
+    if (currentStage < 3) {
+      nodes[currentStage].classList.add('--active');
+      // Activate connectors leading to this node
+      if (currentStage > 0) {
+        connectors[currentStage - 1].classList.add('--active');
+      }
+    }
+  }
+
+  // Start cycling after page load animation
+  setTimeout(function() {
+    cycleStage();
+    setInterval(cycleStage, 1600);
+  }, 1200);
+
+  // CTA form — submit to Formspree via AJAX
+  var form = document.getElementById('ctaForm');
+  var btn = document.getElementById('ctaBtn');
+
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    var input = form.querySelector('input');
+    if (!input.value || !input.checkValidity()) return;
+
+    btn.textContent = 'Sending...';
+    btn.disabled = true;
+
+    fetch(form.action, {
+      method: 'POST',
+      headers: { 'Accept': 'application/json' },
+      body: new FormData(form)
+    }).then(function(res) {
+      if (res.ok) {
+        btn.textContent = 'You\'re in \u2713';
+        btn.style.pointerEvents = 'none';
+        btn.style.opacity = '0.8';
+        input.disabled = true;
+        input.style.opacity = '0.5';
+      } else {
+        btn.textContent = 'Try again';
+        btn.disabled = false;
+      }
+    }).catch(function() {
+      btn.textContent = 'Try again';
+      btn.disabled = false;
+    });
+  });
+})();
+</script>
+</body>
+</html>
