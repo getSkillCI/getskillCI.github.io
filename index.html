@@ -5,6 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>skillCI — Continuous Integration for Agent Skills</title>
 <meta name="description" content="Collect skills from across your repos, validate them against org standards, and ship them to your team's agent tools.">
+<link rel="icon" type="image/png" href="assets/ckillCI-icon-round.png">
+<meta property="og:title" content="skillCI — Continuous Integration for Agent Skills">
+<meta property="og:description" content="Collect skills from across your repos, validate them against org standards, and ship them to your team's agent tools.">
+<meta property="og:image" content="https://skillci.com/assets/skillCI-icon-square.png">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:site" content="@getskillCI">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -16,12 +23,12 @@
   --bg-base: #0a0f1a;
   --bg-surface: #111a2e;
   --bg-elevated: #162038;
-  --border: rgba(100, 200, 160, 0.08);
-  --border-active: rgba(0, 255, 136, 0.25);
-  --green: #00ff88;
-  --green-dim: #00cc6a;
-  --green-glow: rgba(0, 255, 136, 0.15);
-  --cyan: #06d6a0;
+  --border: rgba(106, 215, 87, 0.08);
+  --border-active: rgba(106, 215, 87, 0.3);
+  --green: #6AD757;
+  --green-dim: #5abc48;
+  --green-glow: rgba(106, 215, 87, 0.15);
+  --cyan: #4ec93e;
   --amber: #fbbf24;
   --text-primary: #e8f0ec;
   --text-secondary: #7a8f85;
@@ -47,8 +54,8 @@ body {
   inset: 0;
   z-index: 0;
   background-image:
-    linear-gradient(rgba(0, 255, 136, 0.02) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 255, 136, 0.02) 1px, transparent 1px);
+    linear-gradient(rgba(106, 215, 87, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(106, 215, 87, 0.02) 1px, transparent 1px);
   background-size: 60px 60px;
   mask-image: radial-gradient(ellipse 80% 60% at 50% 30%, black 20%, transparent 70%);
 }
@@ -98,35 +105,12 @@ body {
 .logo {
   display: flex;
   align-items: center;
-  gap: 10px;
   text-decoration: none;
 }
 
-.logo__icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  background: linear-gradient(135deg, var(--green) 0%, var(--cyan) 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--mono);
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--bg-deep);
-  position: relative;
-}
-
-.logo__text {
-  font-family: var(--mono);
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--text-primary);
-  letter-spacing: -0.02em;
-}
-
-.logo__text span {
-  color: var(--green);
+.logo__svg {
+  height: 22px;
+  width: auto;
 }
 
 .header__badge {
@@ -135,7 +119,7 @@ body {
   font-weight: 500;
   color: var(--green);
   background: var(--green-glow);
-  border: 1px solid rgba(0, 255, 136, 0.15);
+  border: 1px solid rgba(106, 215, 87, 0.15);
   padding: 5px 12px;
   border-radius: 20px;
   letter-spacing: 0.05em;
@@ -236,7 +220,7 @@ body {
 
 .pipeline__node.--active {
   border-color: var(--border-active);
-  box-shadow: 0 0 30px var(--green-glow), inset 0 1px 0 rgba(0, 255, 136, 0.08);
+  box-shadow: 0 0 30px var(--green-glow), inset 0 1px 0 rgba(106, 215, 87, 0.08);
 }
 
 .pipeline__node-icon {
@@ -510,8 +494,8 @@ body {
 
 .pipeline__node.--active {
   border-color: var(--border-active);
-  box-shadow: 0 0 30px var(--green-glow), inset 0 1px 0 rgba(0, 255, 136, 0.08);
-  background: rgba(0, 255, 136, 0.03);
+  box-shadow: 0 0 30px var(--green-glow), inset 0 1px 0 rgba(106, 215, 87, 0.08);
+  background: rgba(106, 215, 87, 0.03);
 }
 
 .pipeline__node.--active .pipeline__node-label {
@@ -578,8 +562,7 @@ body {
     <div class="container">
       <div class="header__inner">
         <a href="/" class="logo">
-          <div class="logo__icon">CI</div>
-          <div class="logo__text">skill<span>CI</span></div>
+          <img src="assets/wordmark.svg" alt="skillCI" class="logo__svg">
         </a>
         <div class="header__badge">Coming Soon</div>
       </div>
