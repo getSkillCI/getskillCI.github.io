@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>skillCI — Continuous Integration for Agent Skills</title>
-<meta name="description" content="Collect skills from across your repos, validate them against org standards, and ship them to your team's agent tools.">
+<title>skillCI — Context Ops for AI Engineering Teams</title>
+<meta name="description" content="Analyse agent session data to find what's going wrong, then distribute the fix across your team's tools automatically.">
 <link rel="icon" type="image/png" href="assets/ckillCI-icon-round.png">
-<meta property="og:title" content="skillCI — Continuous Integration for Agent Skills">
-<meta property="og:description" content="Collect skills from across your repos, validate them against org standards, and ship them to your team's agent tools.">
+<meta property="og:title" content="skillCI — Context Ops for AI Engineering Teams">
+<meta property="og:description" content="Analyse agent session data to find what's going wrong, then distribute the fix across your team's tools automatically.">
 <meta property="og:image" content="https://skillci.com/assets/skillCI-icon-square.png">
 <meta property="og:type" content="website">
 <meta name="twitter:card" content="summary">
@@ -228,6 +228,100 @@ body {
   margin-top: 14px;
 }
 
+/* ---- Feature strip ---- */
+.features {
+  padding: 0 0 72px;
+  opacity: 0;
+  animation: fadeUp 0.8s ease 0.6s forwards;
+}
+
+.features__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.feature {
+  background: var(--bg-surface);
+  padding: 28px 24px;
+}
+
+.feature__label {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--green);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 10px;
+}
+
+.feature__title {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--text-primary);
+}
+
+.feature__body {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+/* ---- Pricing row ---- */
+.pricing {
+  padding: 0 0 72px;
+  opacity: 0;
+  animation: fadeUp 0.8s ease 0.7s forwards;
+}
+
+.pricing__row {
+  display: flex;
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.plan {
+  flex: 1;
+  background: var(--bg-surface);
+  padding: 24px 20px;
+}
+
+.plan--highlight {
+  background: color-mix(in srgb, var(--bg-surface) 80%, var(--green) 5%);
+}
+
+.plan__name {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--green);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 6px;
+}
+
+.plan__price {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.plan__desc {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
 /* ---- Footer ---- */
 .footer {
   padding: 40px 0;
@@ -291,6 +385,14 @@ body {
 
   .cta__input, .cta__btn { width: 100%; }
 
+  .features__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .pricing__row {
+    flex-direction: column;
+  }
+
   .footer__inner {
     flex-direction: column;
     gap: 16px;
@@ -310,7 +412,7 @@ body {
         <a href="/" class="logo">
           <img src="assets/wordmark.svg" alt="skillCI" class="logo__svg">
         </a>
-        <div class="header__badge">Coming Soon</div>
+        <div class="header__badge">Context Ops</div>
       </div>
     </div>
   </header>
@@ -318,8 +420,8 @@ body {
   <main class="hero">
     <div class="container">
       <div class="hero__content">
-        <h1 class="hero__title">Continuous integration<br>for <em>agent skills</em></h1>
-        <p class="hero__desc">Collect skills from across your repos, validate them against org standards, and ship them to your team's agent tools.</p>
+        <h1 class="hero__title">Continuous integration<br>for <em>agent context</em></h1>
+        <p class="hero__desc">Analyse Claude Code session data to find why your agent underperforms, then distribute the fix across your team's tools automatically.</p>
 
         <div class="cta">
           <p class="cta__label">Get early access</p>
@@ -333,10 +435,55 @@ body {
     </div>
   </main>
 
+  <section class="features">
+    <div class="container">
+      <div class="features__grid">
+        <div class="feature">
+          <div class="feature__label">Analyze</div>
+          <div class="feature__title">Find what's broken in context</div>
+          <div class="feature__body">Two-pass analysis: local heuristics parse your JSONL logs for reprompt patterns, tool errors, and ghost skills — no data leaves your machine. An optional LLM pass surfaces root causes across sessions.</div>
+        </div>
+        <div class="feature">
+          <div class="feature__label">Distribute</div>
+          <div class="feature__title">Ship the fix to your whole team</div>
+          <div class="feature__body">Validated skills, CLAUDE.md rules, and config changes are packaged and synced to every developer's agent tools. One merged intervention, zero manual distribution.</div>
+        </div>
+        <div class="feature">
+          <div class="feature__label">Measure</div>
+          <div class="feature__title">Close the loop</div>
+          <div class="feature__body">Track reprompt rates, token costs, and skill activation before and after each intervention. Know whether your context improvements are actually working.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="pricing">
+    <div class="container">
+      <div class="pricing__row">
+        <div class="plan">
+          <div class="plan__name">CLI &mdash; Free / OSS</div>
+          <div class="plan__price">$0</div>
+          <div class="plan__desc">Full local analysis for individual developers. Parse your own logs, run heuristics, bring your own LLM key.</div>
+        </div>
+        <div class="plan plan--highlight">
+          <div class="plan__name">Team</div>
+          <div class="plan__price">$49&ndash;79 / user / mo</div>
+          <div class="plan__desc">Cross-team analysis, managed skill library, hosted LLM analysis, and automatic recommendations. Min 3 seats.</div>
+        </div>
+        <div class="plan">
+          <div class="plan__name">Enterprise</div>
+          <div class="plan__price">Custom</div>
+          <div class="plan__desc">Self-hosted, SSO, custom LLM, air-gapped analysis, SLA.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <footer class="footer">
     <div class="container">
       <div class="footer__inner">
         <span class="footer__copy">&copy; 2026 skillCI</span>
+        <a href="/docs/log-analysis.html" class="footer__link" style="margin-right:16px">Log analysis docs</a>
         <a href="https://x.com/getskillCI" target="_blank" rel="noopener noreferrer" class="footer__link">
           <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
           @getskillCI

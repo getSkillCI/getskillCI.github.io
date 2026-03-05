@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Local Log Analysis — skillCI Docs</title>
+<meta name="description" content="How to analyse Claude Code JSONL session logs locally, what signals matter, and where an LLM adds value.">
+<link rel="icon" type="image/png" href="../assets/ckillCI-icon-round.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg-deep: #060a11;
+  --bg-base: #0a0f1a;
+  --bg-surface: #111a2e;
+  --border: rgba(106, 215, 87, 0.08);
+  --border-active: rgba(106, 215, 87, 0.3);
+  --green: #6AD757;
+  --green-glow: rgba(106, 215, 87, 0.15);
+  --text-primary: #e8f0ec;
+  --text-secondary: #7a8f85;
+  --text-muted: #4a5f55;
+  --mono: 'JetBrains Mono', monospace;
+  --sans: 'Outfit', sans-serif;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  font-family: var(--sans);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+.bg-grid {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background-image:
+    linear-gradient(rgba(106, 215, 87, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(106, 215, 87, 0.02) 1px, transparent 1px);
+  background-size: 60px 60px;
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 50%, black 20%, transparent 70%);
+}
+
+.page { position: relative; z-index: 1; }
+.container { width: 100%; max-width: 760px; margin: 0 auto; padding: 0 24px; }
+
+.header {
+  padding: 28px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.header__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.logo__svg { height: 20px; width: auto; }
+
+.nav__link {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.nav__link:hover { color: var(--text-primary); }
+
+.doc {
+  padding: 60px 0 100px;
+}
+
+.doc__eyebrow {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--green);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 16px;
+}
+
+.doc__title {
+  font-size: clamp(28px, 4vw, 44px);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  margin-bottom: 20px;
+}
+
+.doc__lead {
+  font-size: 17px;
+  line-height: 1.7;
+  color: var(--text-secondary);
+  max-width: 620px;
+  margin-bottom: 56px;
+}
+
+h2 {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 48px 0 16px;
+  color: var(--text-primary);
+}
+
+h3 {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--green);
+  font-family: var(--mono);
+  margin: 32px 0 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+p {
+  font-size: 15px;
+  line-height: 1.75;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+}
+
+code {
+  font-family: var(--mono);
+  font-size: 13px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: var(--text-primary);
+}
+
+pre {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px 22px;
+  overflow-x: auto;
+  margin: 20px 0;
+}
+
+pre code {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--text-primary);
+}
+
+.callout {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-active);
+  border-left: 3px solid var(--green);
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin: 24px 0;
+}
+
+.callout p { margin: 0; font-size: 14px; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20px 0;
+  font-size: 13px;
+}
+
+th {
+  font-family: var(--mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--green);
+  text-align: left;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-active);
+}
+
+td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-secondary);
+  vertical-align: top;
+}
+
+td code { font-size: 12px; }
+
+.two-pass {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  margin: 24px 0;
+}
+
+.pass {
+  background: var(--bg-surface);
+  padding: 24px;
+}
+
+.pass__label {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--green);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 8px;
+}
+
+.pass__title {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 10px;
+  color: var(--text-primary);
+}
+
+.pass__body {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+.pass__body ul {
+  padding-left: 18px;
+  margin-top: 8px;
+}
+
+.pass__body li { margin-bottom: 4px; }
+
+@media (max-width: 600px) {
+  .two-pass { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="bg-grid"></div>
+
+<div class="page">
+  <header class="header">
+    <div class="container">
+      <div class="header__inner">
+        <a href="/" class="logo">
+          <img src="../assets/wordmark.svg" alt="skillCI" class="logo__svg">
+        </a>
+        <a href="/" class="nav__link">&larr; Home</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="doc">
+    <div class="container">
+      <div class="doc__eyebrow">Context Ops / Docs</div>
+      <h1 class="doc__title">Local Log Analysis</h1>
+      <p class="doc__lead">Claude Code records every session as structured JSONL files on your machine. Here's what's in them, how to extract meaningful signals without sending data anywhere, and where an LLM pass earns its keep.</p>
+
+      <h2>Where the data lives</h2>
+      <p>Claude Code writes session transcripts to <code>~/.claude/projects/</code>. Each project directory contains one <code>.jsonl</code> file per session. Every line is a typed JSON record linked by <code>parentUuid</code>.</p>
+
+      <pre><code>~/.claude/projects/
+  -Users-you-code-my-service/
+    abc123def456.jsonl
+    789xyz....jsonl
+  -Users-you-code-other-project/
+    ...</code></pre>
+
+      <h2>Record types</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Type</th>
+            <th>Key fields</th>
+            <th>What it tells you</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>system</code></td>
+            <td><code>content</code></td>
+            <td>Full system prompt: CLAUDE.md, loaded skills, tool definitions</td>
+          </tr>
+          <tr>
+            <td><code>user</code></td>
+            <td><code>message.content</code></td>
+            <td>User prompts and hook injections — the reprompt signal lives here</td>
+          </tr>
+          <tr>
+            <td><code>assistant</code></td>
+            <td><code>message.usage</code>, <code>message.content</code></td>
+            <td>Per-turn token usage (<code>input_tokens</code>, <code>output_tokens</code>, <code>cache_read_input_tokens</code>), tool calls, thinking blocks</td>
+          </tr>
+          <tr>
+            <td><code>tool_result</code></td>
+            <td><code>content</code>, <code>isError</code></td>
+            <td>Whether tool calls succeeded or failed</td>
+          </tr>
+          <tr>
+            <td><code>summary</code></td>
+            <td><code>summary</code></td>
+            <td>Compaction checkpoint — context pressure forced summarisation</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Two-pass analysis</h2>
+      <p>The privacy-preserving architecture splits analysis into two stages. Pass 1 runs entirely locally; Pass 2 is optional and only ever sees compressed summaries — never raw code or conversation content.</p>
+
+      <div class="two-pass">
+        <div class="pass">
+          <div class="pass__label">Pass 1</div>
+          <div class="pass__title">Local heuristics</div>
+          <div class="pass__body">
+            Pure computation over JSONL. No network, no LLM. Produces a ~200-token signal summary per session.
+            <ul>
+              <li>Token usage &amp; cache hit ratio per turn</li>
+              <li>Tool error rate (<code>isError</code> in <code>tool_result</code>)</li>
+              <li>Reprompt count proxy: consecutive user turns with short gaps</li>
+              <li>Compaction events (count of <code>summary</code> records)</li>
+              <li>Ghost skills: loaded in system prompt but never invoked</li>
+              <li>Repeated file reads within a session</li>
+            </ul>
+          </div>
+        </div>
+        <div class="pass">
+          <div class="pass__label">Pass 2</div>
+          <div class="pass__title">LLM pattern analysis</div>
+          <div class="pass__body">
+            Batch signal summaries from Pass 1 are sent to an LLM. The LLM identifies cross-session patterns and drafts interventions.
+            <ul>
+              <li>Clusters recurring correction types</li>
+              <li>Diagnoses why a skill is underperforming</li>
+              <li>Drafts CLAUDE.md rules and skill rewrites</li>
+              <li>CLI: bring your own API key</li>
+              <li>Team tier: hosted, no key needed</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout">
+        <p>Pass 1 is where SkillCI starts. You can get actionable metrics — reprompt rates, token trends, tool error spikes — from plain JSONL parsing with no external dependencies. LLM analysis layers on top for root-cause reasoning.</p>
+      </div>
+
+      <h2>Parsing logs yourself</h2>
+      <p>SkillCI ships a reference script at <code>scripts/parse_claude_logs.py</code> that outputs session-level metrics as JSON. It requires only Python 3.9+ from the standard library.</p>
+
+      <h3>Quick start</h3>
+      <pre><code># Scan all projects, pretty-print summary
+python scripts/parse_claude_logs.py
+
+# Single project directory
+python scripts/parse_claude_logs.py --project ~/.claude/projects/-Users-you-code-my-service
+
+# Write to file
+python scripts/parse_claude_logs.py --out metrics.json
+
+# Filter to sessions newer than N days
+python scripts/parse_claude_logs.py --days 7</code></pre>
+
+      <h3>Output shape</h3>
+      <pre><code>[
+  {
+    "session_id": "abc123def456",
+    "project": "-Users-you-code-my-service",
+    "file": "/Users/you/.claude/projects/.../abc123def456.jsonl",
+    "turns": 18,
+    "user_turns": 9,
+    "assistant_turns": 9,
+    "total_input_tokens": 45200,
+    "total_output_tokens": 3840,
+    "total_cache_read_tokens": 28100,
+    "cache_hit_ratio": 0.622,
+    "tool_calls": 14,
+    "tool_errors": 2,
+    "tool_error_rate": 0.143,
+    "compaction_events": 1,
+    "reprompt_count_proxy": 2,
+    "skills_in_system_prompt": 2,
+    "first_ts": "2026-03-01T14:30:00.000Z",
+    "last_ts": "2026-03-01T14:44:07.000Z",
+    "duration_seconds": 847
+  }
+]</code></pre>
+
+      <h3>Key metric definitions</h3>
+      <table>
+        <thead>
+          <tr><th>Metric</th><th>How it's computed</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>reprompt_count_proxy</code></td>
+            <td>User turns that directly follow another user turn (no assistant turn between them) — a proxy for the user correcting or nudging the agent</td>
+          </tr>
+          <tr>
+            <td><code>tool_error_rate</code></td>
+            <td><code>tool_result</code> records where <code>isError</code> is true, divided by total tool calls</td>
+          </tr>
+          <tr>
+            <td><code>compaction_events</code></td>
+            <td>Count of <code>summary</code>-type records — each one marks where context pressure forced summarisation</td>
+          </tr>
+          <tr>
+            <td><code>cache_hit_ratio</code></td>
+            <td><code>cache_read_input_tokens / total_input_tokens</code> across all assistant turns</td>
+          </tr>
+          <tr>
+            <td><code>skills_in_system_prompt</code></td>
+            <td>Count of <code>SKILL.md</code> or <code>.claude/skills/</code> references found in the <code>system</code> record</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>What to look for</h2>
+      <p><strong style="color: var(--text-primary)">High reprompt proxy (&gt;3)</strong> — the agent is missing context it needs. Check whether a skill or CLAUDE.md rule addresses the task type.</p>
+      <p><strong style="color: var(--text-primary)">High tool error rate (&gt;20%)</strong> — the agent is exploring unfamiliar territory. A skill describing project structure or file conventions is likely missing.</p>
+      <p><strong style="color: var(--text-primary)">Multiple compaction events</strong> — sessions are hitting context limits. Consider breaking tasks into smaller units or using more focused skills.</p>
+      <p><strong style="color: var(--text-primary)">Low cache hit ratio (&lt;40%)</strong> — the system prompt changes frequently between turns, reducing cache efficiency. Stable CLAUDE.md and skill content improves this.</p>
+      <p><strong style="color: var(--text-primary)">Skills loaded but reprompts still high</strong> — the skills are present but not helping. Pass 2 (LLM analysis) is particularly useful here: it can read the skill descriptions and the correction patterns and identify the mismatch.</p>
+    </div>
+  </main>
+</div>
+
+</body>
+</html>
