@@ -9,7 +9,7 @@ Serves on GitHub Pages from the `main` branch. Custom domain configured via `CNA
 ```
 index.html          — Main landing page
 docs/
-  log-analysis.html — Local log analysis explainer
+  log-analysis.md   — Local log analysis explainer + latest analytics snapshot
 scripts/
   parse_claude_logs.py — Pass 1 JSONL metrics extractor
 assets/
